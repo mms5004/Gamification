@@ -5,48 +5,46 @@ using UnityEngine;
 public class Controller : MonoBehaviour
 {
     
-    public float CamSpeed = 10;
-    public float CamRotationSpeed = 2;
-    public GameObject CameraPivot;
-    public GameObject Camera;
+    [SerializeField] private float CamSpeed = 10;
+    [SerializeField] private float CamRotationSpeed = 2;
+    [SerializeField] private GameObject CameraPivot;
+    [SerializeField] private GameObject Camera;
 
 
     [Header("Camera Distance")]
-    public float CameraDistance = 7.5f;
-    public float CameraDistanceMin = 1.0f;
-    public float CameraDistanceMax = 30f;
-    public float ScrollSpeed = 3.0f;
+    [SerializeField] private float _CameraDistance = 7.5f;
+    [SerializeField] private float _CameraDistanceMin = 1.0f;
+    [SerializeField] private float _CameraDistanceMax = 30f;
+    [SerializeField] private float _ScrollSpeed = 3.0f;
 
 
     [Header("Camera rotation clamp")]
-    public float CameraClampYUp = 20;
-    public float CameraClampYDown = -15;
+    [SerializeField] private float _CameraClampYUp = 20;
+    [SerializeField] private float _CameraClampYDown = -15;
 
+    private Catapult _Catapult;
 
-    [Header("Projectile")]
-    public GameObject SpawnProjectileLocation;
-    public GameObject Projectile;
-
-    static public float XSlide;
+    static public float _XSlide;
 
     void Start()
     {
+        _Catapult = this.GetComponent<Catapult>();
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
-        Camera.transform.localPosition =  Camera.transform.localPosition.normalized * CameraDistance;
+        Camera.transform.localPosition =  Camera.transform.localPosition.normalized * _CameraDistance;
     }
 
     void Update()
     {
         //camera distance
         float Scroll = Input.GetAxis("Mouse ScrollWheel");
-        CameraDistance -= Scroll * ScrollSpeed;
-        CameraDistance = Mathf.Clamp(CameraDistance, CameraDistanceMin, CameraDistanceMax);
-        Camera.transform.localPosition =  Camera.transform.localPosition.normalized * CameraDistance;
+        _CameraDistance -= Scroll * _ScrollSpeed;
+        _CameraDistance = Mathf.Clamp(_CameraClampYDown, _CameraDistanceMin, _CameraDistanceMax);
+        Camera.transform.localPosition =  Camera.transform.localPosition.normalized * _CameraDistance;
 
         if (Input.GetMouseButtonDown(0))
         {
-            GameObject projectile = Instantiate(Projectile, SpawnProjectileLocation.transform.position, SpawnProjectileLocation.transform.rotation);       
+            _Catapult.TryThrow();
         }
 
         Direction();
@@ -55,16 +53,16 @@ public class Controller : MonoBehaviour
 
         transform.rotation = Quaternion.Euler(0, Input.GetAxis("Mouse X") * CamRotationSpeed + transform.rotation.eulerAngles.y, 0);
         float RotX = -Input.GetAxis("Mouse Y") * CamRotationSpeed + CameraPivot.transform.rotation.eulerAngles.x;
-        XSlide += Input.GetAxis("Mouse X") * 0.01f;
-        XSlide = Mathf.Clamp(XSlide,-1.0f,1.0f);
+        _XSlide += Input.GetAxis("Mouse X") * 0.01f;
+        _XSlide = Mathf.Clamp(_XSlide,-1.0f,1.0f);
 
-        if (RotX > CameraClampYUp && RotX < 180)
+        if (RotX > _CameraClampYUp && RotX < 180)
         {
-            RotX = CameraClampYUp;
+            RotX = _CameraClampYUp;
         }
-        if(RotX < 360 + CameraClampYDown && RotX > 180)
+        if(RotX < 360 + _CameraClampYDown && RotX > 180)
         {
-            RotX = CameraClampYDown;
+            RotX = _CameraClampYDown;
         }
 
         CameraPivot.transform.localRotation = Quaternion.Euler(RotX, 0, 0);
@@ -74,7 +72,7 @@ public class Controller : MonoBehaviour
 
     private void Direction()
     {
-        Vector3 Dir = transform.right * XSlide + transform.forward;
+        Vector3 Dir = transform.right * _XSlide + transform.forward;
         if (Input.GetKey(KeyCode.W))
         {
             transform.position += Dir * Time.deltaTime * CamSpeed;
@@ -99,13 +97,13 @@ public class Controller : MonoBehaviour
 
     void WheelForward()
     {
-        if (XSlide > 0)
+        if (_XSlide > 0)
         {
-            XSlide -= Time.deltaTime;
+            _XSlide -= Time.deltaTime;
         }
-        else if(XSlide < 0)
+        else if(_XSlide < 0)
         {
-            XSlide += Time.deltaTime;
+            _XSlide += Time.deltaTime;
         }
     }
 }

@@ -4,14 +4,14 @@ using UnityEngine;
 
 public class Wheel : MonoBehaviour
 {
-    Vector3 Location;
-    public float YRotation;
+    private Vector3 Location;
+    private float YRotation;
     void Start()
     {
         Location = transform.position;
     }
     void Update()
     {        
-        transform.localRotation = Quaternion.Euler(0, Controller.XSlide * 45 , 0);
+        transform.localRotation = Quaternion.Euler(0,  Controller._XSlide * 45, 90);
     }
 }

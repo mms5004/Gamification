@@ -5,37 +5,37 @@ using UnityEngine.UIElements;
 
 public class Projectile : MonoBehaviour
 {
-    LineRenderer lineRenderer;
-    public float angle;
-    public float initialVelocity;
-    float initialXVelocity;
-    float initialYVelocity;
-    public float gravity;
-    float elapsedTime;
+    static public float Gravity = -9.81f;
 
+    public bool IsThrown { get; private set; } = false;
 
+    private float _angle;
+    private float _initialZVelocity;
+    private float _initialYVelocity;
+    private float _elapsedTime = 0;
 
-   
     // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
-        initialVelocity = 10;
-        angle = 45;
-        initialXVelocity = initialVelocity * Mathf.Cos(angle * Mathf.Deg2Rad);
-        initialYVelocity = initialVelocity * Mathf.Sin(angle * Mathf.Deg2Rad);
-        gravity = -9.81f;
-        elapsedTime = 0;
 
     }
 
     // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        elapsedTime += Time.deltaTime;
-        transform.Translate((initialXVelocity * elapsedTime)* Time.deltaTime , (initialYVelocity +  (0.5f * gravity * Mathf.Pow(elapsedTime,2))) * Time.deltaTime, 0);
-
-
-
+        if (IsThrown)
+        {
+            _elapsedTime += Time.deltaTime;
+            transform.Translate(0, (_initialYVelocity + (0.5f * Gravity * Mathf.Pow(_elapsedTime, 2))) * Time.deltaTime,
+                _initialZVelocity * _elapsedTime * Time.deltaTime);
+        }
     }
-   
+
+    public void Throw(float initialVelocity)
+    {
+        IsThrown = true;
+        _initialZVelocity = initialVelocity * Mathf.Cos(_angle * Mathf.Deg2Rad);
+        _initialYVelocity = initialVelocity * Mathf.Sin(_angle * Mathf.Deg2Rad);
+        _angle = 45;
+    }
 }

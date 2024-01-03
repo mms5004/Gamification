@@ -1277,7 +1277,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1269769823650798336, guid: db56714ee8578c5429be70173991e708, type: 3}
       propertyPath: m_Name
-      value: TargetsManager
+      value: EnemyManager
       objectReference: {fileID: 0}
     - target: {fileID: 3170980670783882543, guid: db56714ee8578c5429be70173991e708, type: 3}
       propertyPath: m_RootOrder
@@ -1431,7 +1431,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 539497806596081501, guid: c9894082ae188df45997d781d35d9cbe, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1
+      value: 0.9
       objectReference: {fileID: 0}
     - target: {fileID: 539497806596081501, guid: c9894082ae188df45997d781d35d9cbe, type: 3}
       propertyPath: m_LocalPosition.z
@@ -1469,6 +1469,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 3809351509842465186, guid: c9894082ae188df45997d781d35d9cbe, type: 3}
+      propertyPath: Projectile
+      value: 
+      objectReference: {fileID: 2919123707426022288, guid: 7c62fb5662984094ab3411458487c638, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
