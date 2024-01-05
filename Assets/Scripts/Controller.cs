@@ -36,6 +36,10 @@ public class Controller : MonoBehaviour
 
     void Update()
     {
+        if (PauseMenu.isPaused)
+        {
+            return;
+        }
         //camera distance
         float Scroll = Input.GetAxis("Mouse ScrollWheel");
         _CameraDistance -= Scroll * _ScrollSpeed;
@@ -45,6 +49,11 @@ public class Controller : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             _Catapult.TryThrow();
+            
+        }
+        if(Input.GetMouseButtonUp(0))
+        {
+            
         }
 
         Direction();
@@ -106,4 +115,6 @@ public class Controller : MonoBehaviour
             _XSlide += Time.deltaTime;
         }
     }
+
+
 }

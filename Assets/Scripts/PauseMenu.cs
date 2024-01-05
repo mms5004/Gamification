@@ -16,10 +16,10 @@ public class PauseMenu : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Y))
         {
             if(isPaused)
-            {
+            {                
                 Resume();
             } else
-            {
+            {                
                 Pause();
             }
         }
@@ -27,6 +27,8 @@ public class PauseMenu : MonoBehaviour
 
     public void Resume()
     {
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;        
         PauseMenuUI.SetActive(false);
         Time.timeScale = 1f;
         isPaused = false;
@@ -34,6 +36,8 @@ public class PauseMenu : MonoBehaviour
 
     void Pause()
     {
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.Confined;
         PauseMenuUI.SetActive(true);
         Time.timeScale = 0f;
         isPaused = true;
