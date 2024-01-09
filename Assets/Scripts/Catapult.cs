@@ -13,8 +13,11 @@ public enum CatapultState
 
 public class Catapult : MonoBehaviour
 {
+
+
     [SerializeField] private GameObject _spawnProjectileLocation;
     [SerializeField] private GameObject _projectile;
+    public ProjectileClass _currentProjectileClass;
     [SerializeField] private GameObject _arm;
     [SerializeField] private GameObject _reloadMechanism;
 
@@ -56,6 +59,7 @@ public class Catapult : MonoBehaviour
         _throwingSpeed = throwingArcLength / _throwingTime;
         _throwingRotationSpeed = _throwingAngle / _throwingTime;
         _reloadRotationSpeed = -_throwingAngle / _reloadingTime;
+
     }
 
     // Update is called once per frame
@@ -78,7 +82,9 @@ public class Catapult : MonoBehaviour
     private void LateUpdate()
     {
         if (_currentProjectile != null && !_currentProjectile.IsFlying)
+        {
             _currentProjectile.transform.SetPositionAndRotation(_spawnProjectileLocation.transform.position, _spawnProjectileLocation.transform.rotation);
+        }
     }
 
     private void RotateArm(float rotationSpeed)
@@ -93,11 +99,12 @@ public class Catapult : MonoBehaviour
 
         if (_currentAngle >= _endAngle)
         {
+            _currentProjectile.Throw(_throwingSpeed);
+            _currentProjectile = null;
+            _state = CatapultState.Reloading;
+
             StopCoroutine(_visualizationCoroutine);           
             StartCoroutine(DisableVisualisation());
-
-            _currentProjectile.Throw(_throwingSpeed);
-            _state = CatapultState.Reloading;
         }
     }
 
@@ -112,7 +119,9 @@ public class Catapult : MonoBehaviour
 
     private void Rearmed()
     {
-        _currentProjectile = Instantiate(_projectile, _spawnProjectileLocation.transform.position, _spawnProjectileLocation.transform.rotation).GetComponent<Projectile>();
+       _currentProjectile = Instantiate(_projectile, _spawnProjectileLocation.transform.position, _spawnProjectileLocation.transform.rotation).GetComponent<Projectile>();
+              
+        _currentProjectile._classPower = _currentProjectileClass;
         _state = CatapultState.Armed;
     }
 
@@ -121,20 +130,20 @@ public class Catapult : MonoBehaviour
         if (_state == CatapultState.Armed)
         {
             _state = CatapultState.Throwing;
-            StartCoroutine(EnableVisualisation());
             _visualizationCoroutine = StartCoroutine(ThrowVizualisation());
+            StartCoroutine(EnableVisualisation());
         }
     }
 
     //Trail visualization 
     private IEnumerator ThrowVizualisation()
     {
-        while (true) //My favorite loop //_state != CatapultState.Reloading
+        while (true) //My favorite loop 
         {
             float elapsedTime = _timeRenderer/_samples;
             float localTime = 0;
             _lineRenderer.positionCount = _samples;
-            
+            Projectile ProjectileScript = _projectile.GetComponent<Projectile>();
 
             //Set coordinates in world position
             Vector3 initPos = _spawnProjectileLocation.transform.position;
@@ -143,6 +152,8 @@ public class Catapult : MonoBehaviour
             Vector3 lastPosition = _spawnProjectileLocation.transform.position;
 
             Vector3 Speed = _spawnProjectileLocation.transform.up * _throwingSpeed;
+
+            Vector3 WindSpeed = Vector3.zero;
 
             bool Impact = false;
 
@@ -160,6 +171,11 @@ public class Catapult : MonoBehaviour
                     //*weird
                     float gravity = (0.5f * -9.81f * Mathf.Pow(localTime, 2.0f)) * elapsedTime;
                     lastPosition += Speed * elapsedTime + (gravity * Vector3.up);
+
+                    //add wind
+
+                    WindSpeed = Wind.WindForward * localTime * ProjectileScript.WindFactor;
+                    lastPosition += WindSpeed  * elapsedTime;
 
                     //float gravity = (0.5f * -9.81f * Mathf.Pow(localTime, 2));
                     //Vector3 Pos = initPos + Speed * localTime + (gravity * Vector3.up);

@@ -296,4 +296,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d5f22306886cfb4986e9e403b018987, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Gravity: -9.81
+  WindFactor: 3
+  _classPower: 0
+  _explosion: {fileID: 4058659487743966848, guid: 20faaac30b7ccd34398025225c77fed0, type: 3}
+  _freeze: {fileID: 1865104664721322309, guid: e3e1f886796ccdc4c8261e0a92b63b48, type: 3}
+  _IA: {fileID: 0}
+  _yVelocityThreshold: 2
+  _bounceEnergyTransfer: 0.04
   _trailRenderer: {fileID: 8200210401199369643}

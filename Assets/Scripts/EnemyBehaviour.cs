@@ -25,8 +25,16 @@ public class EnemyBehaviour : MonoBehaviour
 
         if (rectangle.Contains(new Vector2(transform.position.x, transform.position.z)))
         {
-            _spawnManager.DespawnTarget(this);
-            Destroy(this.gameObject);
+            Die();
         }
+    }
+    public void Die()
+    {
+        _spawnManager.DespawnTarget(this);
+        Destroy(this.gameObject);
+    }
+    public void Freeze()
+    {
+        _speed = 0;
     }
 }
