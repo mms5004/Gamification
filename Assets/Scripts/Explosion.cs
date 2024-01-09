@@ -8,14 +8,14 @@ public class Explosion : MonoBehaviour
     public float waitToDelete = 5.0f;
     void Start()
     {
-        RaycastHit[] collisions = Physics.SphereCastAll(transform.position, Radius, Vector3.zero);
+        RaycastHit[] collisions = Physics.SphereCastAll(transform.position, Radius, Vector3.one);
         foreach (RaycastHit hit in collisions)
         {
-            EnemyBehaviour Ennemy;
-            if (Ennemy = hit.transform.gameObject.GetComponent<EnemyBehaviour>())
+            if (hit.transform.tag == "Enemy" )
             {
+                EnemyBehaviour Ennemy = hit.transform.parent.gameObject.GetComponent<EnemyBehaviour>();
                 Ennemy.Die();
-            }
+            }            
         }
         StartCoroutine(KillYourself());
     }
