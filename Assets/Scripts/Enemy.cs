@@ -3,14 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EnemyBehaviour : MonoBehaviour
+public class Enemy : MonoBehaviour
 {
     [SerializeField] private float _speed;
 
     private GameObject _target;
-    private EnemiesManagerBehaviour _spawnManager;
+    private EnemyManager _spawnManager;
 
-    public void Initialize(GameObject target, EnemiesManagerBehaviour spawnManager)
+    public void Initialize(GameObject target, EnemyManager spawnManager)
     {
         _target = target;
         _spawnManager = spawnManager;

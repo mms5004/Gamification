@@ -18,8 +18,8 @@ public class Freeze : MonoBehaviour
         {
             if (hit.transform.tag == "Enemy")
             {
-                EnemyBehaviour Ennemy = hit.transform.parent.gameObject.GetComponent<EnemyBehaviour>();
-                Ennemy.Freeze();
+                Enemy enemy = hit.transform.parent.gameObject.GetComponent<Enemy>();
+                enemy.Freeze();
             }           
         }
         

@@ -1,10 +1,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static UnityEditor.PlayerSettings;
+using Quaternion = UnityEngine.Quaternion;
+using Vector3 = UnityEngine.Vector3;
+using Vector4 = UnityEngine.Vector4;
 
 public enum CatapultState
 {
@@ -13,29 +18,27 @@ public enum CatapultState
 
 public class Catapult : MonoBehaviour
 {
-
-
-    [SerializeField] private GameObject _spawnProjectileLocation;
+    [Header("Catapult Elements")]
+    [SerializeField] private Arm _arm;
     [SerializeField] private GameObject _projectile;
-    public ProjectileClass _currentProjectileClass;
-    [SerializeField] private GameObject _arm;
     [SerializeField] private GameObject _reloadMechanism;
+    [SerializeField] private ProjectileClass _currentProjectileClass;
 
-    [SerializeField] private float _armLength = 6;
+    [Header("Variables")]
+    [SerializeField] private float _reloadingTime = 2;
+    private float _reloadRotationSpeed = 0;
     [SerializeField] private float _startAngle = 6;
     [SerializeField] private float _endAngle = 77;
-
-    [SerializeField] private float _throwingTime = 0.1f;
-    [SerializeField] private float _reloadingTime = 2;
+    private float _currentArmAngle = 0;
+    private float _throwingRangeAngle = 0;
+    private float _throwingArcLength = 0;
+    private float _throwingSpeed = 0;
 
     private CatapultState _state = CatapultState.Unarmed;
     private Projectile _currentProjectile = null;
-    private float _currentAngle = 0;
 
-    private float _throwingAngle = 0;    
-    private float _throwingSpeed = 0;
-    private float _throwingRotationSpeed = 0;
-    private float _reloadRotationSpeed = 0;
+    private Vector3 _spawnProjectilePosition;
+    private Quaternion _spawnProjectileRotation;
 
     [Header("Visualization")]
     public LineRenderer _lineRenderer;
@@ -44,22 +47,27 @@ public class Catapult : MonoBehaviour
     public int _samples;
 
     public Gradient _gradientColor;
-    public float _fadeInSpeed; //in second
-    public float _fadeOutSpeed;//in second
+    public float _fadeInDuration;
+    public float _fadeOutDuration;
 
     private Coroutine _visualizationCoroutine;
 
-    // Start is called before the first frame update
+    public bool WantsToDisplayVisualization = false;
+
+
     private void Start()
     {
-        _throwingAngle = _endAngle - _startAngle;
+        UpdateThrowingVariables();
 
-        float throwingArcLength = Mathf.PI * _armLength * _throwingAngle / 180;
+        _arm.ProjectileSpawnLocation.transform.GetPositionAndRotation(out _spawnProjectilePosition, out _spawnProjectileRotation);
+    }
 
-        _throwingSpeed = throwingArcLength / _throwingTime;
-        _throwingRotationSpeed = _throwingAngle / _throwingTime;
-        _reloadRotationSpeed = -_throwingAngle / _reloadingTime;
-
+    private void UpdateThrowingVariables()
+    {
+        _throwingRangeAngle = _endAngle - _startAngle;
+        _throwingArcLength = Mathf.PI * _arm.Length * _throwingRangeAngle / 180;
+        _throwingSpeed = _throwingArcLength * _arm.RotationSpeed / _throwingRangeAngle;
+        _reloadRotationSpeed = -_throwingRangeAngle / _reloadingTime;
     }
 
     // Update is called once per frame
@@ -83,28 +91,35 @@ public class Catapult : MonoBehaviour
     {
         if (_currentProjectile != null && !_currentProjectile.IsFlying)
         {
-            _currentProjectile.transform.SetPositionAndRotation(_spawnProjectileLocation.transform.position, _spawnProjectileLocation.transform.rotation);
+            _arm.ProjectileSpawnLocation.transform.GetPositionAndRotation(out _spawnProjectilePosition, out _spawnProjectileRotation);
+
+            _currentProjectile.transform.SetPositionAndRotation(_spawnProjectilePosition, _spawnProjectileRotation);
         }
     }
 
     private void RotateArm(float rotationSpeed)
     {
         _arm.transform.Rotate(Vector3.right, rotationSpeed * Time.deltaTime);
-        _currentAngle = _arm.transform.eulerAngles.x;
+        _currentArmAngle = _arm.transform.eulerAngles.x;
+    }
+
+    public void TryThrow()
+    {
+        if (_state == CatapultState.Armed)
+        {
+            _state = CatapultState.Throwing;
+        }
     }
 
     private void Throw()
     {
-        RotateArm(_throwingRotationSpeed);
+        RotateArm(_arm.RotationSpeed);
 
-        if (_currentAngle >= _endAngle)
+        if (_currentArmAngle >= _endAngle)
         {
             _currentProjectile.Throw(_throwingSpeed);
             _currentProjectile = null;
             _state = CatapultState.Reloading;
-
-            StopCoroutine(_visualizationCoroutine);           
-            StartCoroutine(DisableVisualisation());
         }
     }
 
@@ -113,46 +128,56 @@ public class Catapult : MonoBehaviour
         RotateArm(_reloadRotationSpeed);
         _reloadMechanism.transform.Rotate(Vector3.up, 5 * _reloadRotationSpeed * Time.deltaTime);
 
-        if (_currentAngle <= _startAngle)
+        if (_currentArmAngle <= _startAngle)
             _state = CatapultState.Unarmed;
     }
 
     private void Rearmed()
     {
-       _currentProjectile = Instantiate(_projectile, _spawnProjectileLocation.transform.position, _spawnProjectileLocation.transform.rotation).GetComponent<Projectile>();
-              
+       _currentProjectile = Instantiate(_projectile, _spawnProjectilePosition, _spawnProjectileRotation).GetComponent<Projectile>();
         _currentProjectile._classPower = _currentProjectileClass;
         _state = CatapultState.Armed;
+
+        if(WantsToDisplayVisualization)
+            StartVisualization();
     }
 
-    public void TryThrow()
-    {       
-        if (_state == CatapultState.Armed)
-        {
-            _state = CatapultState.Throwing;
-            _visualizationCoroutine = StartCoroutine(ThrowVizualisation());
-            StartCoroutine(EnableVisualisation());
-        }
+    public void StartVisualization()
+    {
+        _visualizationCoroutine = StartCoroutine(ThrowVisualization());
+        StartCoroutine(EnableVisualisation());
+    }
+
+    public void StopVisualization()
+    {
+        StartCoroutine(DisableVisualisation());
     }
 
     //Trail visualization 
-    private IEnumerator ThrowVizualisation()
+    private IEnumerator ThrowVisualization()
     {
         while (true) //My favorite loop 
         {
-            float elapsedTime = _timeRenderer/_samples;
-            float localTime = 0;
+            float elapsedTime = _timeRenderer / _samples;
+
             _lineRenderer.positionCount = _samples;
+
             Projectile ProjectileScript = _projectile.GetComponent<Projectile>();
 
-            //Set coordinates in world position
-            Vector3 initPos = _spawnProjectileLocation.transform.position;
+            //Project the throwing starting position. Need a double check, not perfectly accurate
+            Vector3 pivotPoint = _arm.ProjectileSpawnLocation.transform.position +
+                                 _arm.ProjectileSpawnLocation.transform.forward * _arm.Length;
+            Vector3 relativeStartPosition = new Vector3(
+                0, 
+                Mathf.Sin(_endAngle) * _arm.Length, 
+                Mathf.Cos(_endAngle) * _arm.Length);
+            Vector3 currentPosition = pivotPoint + relativeStartPosition;
 
-            //Last position before impact
-            Vector3 lastPosition = _spawnProjectileLocation.transform.position;
+            //Vector3 direction = Quaternion.AngleAxis(_endAngle, Vector3.right) * _arm.ProjectileSpawnLocation.transform.up;
+            Vector3 direction = Quaternion.AngleAxis(_endAngle, _arm.ProjectileSpawnLocation.transform.right) * _arm.ProjectileSpawnLocation.transform.up;
+            Vector3 initialVelocity = direction * _throwingSpeed;
 
-            Vector3 Speed = _spawnProjectileLocation.transform.up * _throwingSpeed;
-
+            Vector3 GravitySpeed = Vector3.zero;
             Vector3 WindSpeed = Vector3.zero;
 
             bool Impact = false;
@@ -162,30 +187,40 @@ public class Catapult : MonoBehaviour
             {
                 if (Impact)
                 {
-                    _lineRenderer.SetPosition(i, lastPosition);
+                    _lineRenderer.SetPosition(i, currentPosition);
                 }
                 else
                 {
+                    GravitySpeed += 9.807f * elapsedTime * Vector3.down;
+                    WindSpeed += ProjectileScript.WindFactor * elapsedTime * Wind.WindForward;
+
+                    Vector3 velocityCurrentOffset = initialVelocity * elapsedTime;
+                    Vector3 gravityCurrentOffset = GravitySpeed * elapsedTime;
+                    Vector3 windCurrentOffset = WindSpeed * elapsedTime;
+
+                    currentPosition += velocityCurrentOffset + gravityCurrentOffset + windCurrentOffset;
+
+
                     //Based on Maxime's formula 
                     // Gravity is time independent multiply by time step ?
                     //*weird
-                    float gravity = (0.5f * -9.81f * Mathf.Pow(localTime, 2.0f)) * elapsedTime;
-                    lastPosition += Speed * elapsedTime + (gravity * Vector3.up);
+                    
+                    
+                    //float gravity = (0.5f * -9.81f * Mathf.Pow(localTime, 2.0f)) * elapsedTime;
+                    //currentPosition += Speed * elapsedTime + (gravity * Vector3.up);
 
                     //add wind
 
-                    WindSpeed = Wind.WindForward * localTime * ProjectileScript.WindFactor;
-                    lastPosition += WindSpeed  * elapsedTime;
+                    //WindSpeed = Wind.WindForward * localTime * ProjectileScript.WindFactor;
+                    //currentPosition += WindSpeed * elapsedTime;
 
                     //float gravity = (0.5f * -9.81f * Mathf.Pow(localTime, 2));
                     //Vector3 Pos = initPos + Speed * localTime + (gravity * Vector3.up);
 
-                    _lineRenderer.SetPosition(i, lastPosition);
-                    localTime += elapsedTime;
-                    if (lastPosition.y < 0.0f) {Impact = true; }
-                }
-                
+                    _lineRenderer.SetPosition(i, currentPosition);
 
+                    if (currentPosition.y < 0.0f) { Impact = true; }
+                }
             }
             yield return null;
         }
@@ -194,31 +229,35 @@ public class Catapult : MonoBehaviour
     //Fade In
     private IEnumerator EnableVisualisation()
     {
-        float time = 0;
+        float elapsedTime = 0;
         while (true) // yes I love while(true)
         {
-            time += Time.deltaTime;
-            Vector4 alphaColor = new Vector4(1, 1, 1, time / _fadeInSpeed);
-            _lineRenderer.startColor = _gradientColor.colorKeys[0].color * alphaColor*0.25f;
+            elapsedTime += Time.deltaTime;
+            Vector4 alphaColor = new Vector4(1, 1, 1, elapsedTime / _fadeInDuration);
+            _lineRenderer.startColor = _gradientColor.colorKeys[0].color * alphaColor * 0.25f;
             _lineRenderer.endColor = _gradientColor.colorKeys[1].color * alphaColor;
 
-            if(time > _fadeInSpeed) { break; }
+            if(elapsedTime > _fadeInDuration) { break; }
             yield return null;
         }
     }
     //Fade Out
     private IEnumerator DisableVisualisation()
     {
-        float time = _fadeOutSpeed;        
+        float elapsedTime = 0;        
 
         while (true) // anyways, why are you reading ?
         {
-            time -= Time.deltaTime;
-            Vector4 alphaColor = new Vector4(1, 1, 1, time / _fadeOutSpeed);
+            elapsedTime += Time.deltaTime;
+            Vector4 alphaColor = new Vector4(1, 1, 1, _fadeOutDuration - elapsedTime / _fadeOutDuration);
             _lineRenderer.startColor = _gradientColor.colorKeys[0].color * alphaColor;
             _lineRenderer.endColor = _gradientColor.colorKeys[1].color * alphaColor;
 
-            if(time < 0) { break; }
+            if (elapsedTime > _fadeOutDuration)
+            {
+                StopCoroutine(_visualizationCoroutine);
+                break;
+            }
             yield return null;
         }
     }

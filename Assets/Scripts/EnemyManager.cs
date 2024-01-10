@@ -6,10 +6,10 @@ using static UnityEngine.EventSystems.EventTrigger;
 using static UnityEngine.GraphicsBuffer;
 using Random = UnityEngine.Random;
 
-public class EnemiesManagerBehaviour : MonoBehaviour
+public class EnemyManager : MonoBehaviour
 {
     [SerializeField] private GameObject[] _enemies;
-    [SerializeField] private List<EnemyBehaviour> _spawnedEnemies;
+    [SerializeField] private List<Enemy> _spawnedEnemies;
     [SerializeField] private GameObject _player;
     [SerializeField] private GameObject _flag;
 
@@ -49,15 +49,15 @@ public class EnemiesManagerBehaviour : MonoBehaviour
 
         Vector3 relativePosition = new Vector3(Mathf.Sin(angle), 0, Mathf.Cos(angle)) * distance;
 
-        EnemyBehaviour enemy =
+        Enemy enemy =
             Instantiate(_enemies[enemyID], relativePosition + _player.transform.position, _player.transform.rotation)
-                .GetComponent<EnemyBehaviour>();
+                .GetComponent<Enemy>();
         enemy.Initialize(_flag, this);
 
         _spawnedEnemies.Add(enemy);
     }
 
-    public void DespawnTarget(EnemyBehaviour enemy)
+    public void DespawnTarget(Enemy enemy)
     {
         _spawnedEnemies.Remove(enemy);
     }

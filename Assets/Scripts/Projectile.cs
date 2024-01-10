@@ -1,8 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static UnityEditor.PlayerSettings;
+using Quaternion = UnityEngine.Quaternion;
+using Vector3 = UnityEngine.Vector3;
 
 public enum ProjectileClass
 {
@@ -12,14 +15,12 @@ public enum ProjectileClass
 
 public class Projectile : MonoBehaviour
 {
-    public float Gravity = -9.81f;
+    public Vector3 GravityAcceleration = new Vector3(0, -9.81f, 0);
     public float WindFactor = 0.01f;
     public bool IsFlying { get; private set; } = false;
     private Vector3 _direction;
     private Vector3 _windVelocity;
     private Vector3 _windDirection;
-    private float _speed = 0;
-    private float _elapsedTime = 0;
 
     [Header("Power")]
     public ProjectileClass _classPower;
@@ -28,11 +29,13 @@ public class Projectile : MonoBehaviour
     public GameObject _IA;
 
     [Header("Bounce")]
-    public float _yVelocityThreshold = 10.0f;
-    public float _bounceEnergyTransfer = 0.1f;
+    public float _verticalBounceSpeedThreshold = 1;
 
     public TrailRenderer _trailRenderer;
 
+    private Vector3 _initialVelocity;
+    private Vector3 _gravityCurrentSpeed = Vector3.zero;
+    private Vector3 _windCurrentSpeed = Vector3.zero;
 
     // Start is called before the first frame update
     private void Start()
@@ -45,20 +48,16 @@ public class Projectile : MonoBehaviour
     {
         if (IsFlying)
         {
-            float delta = Time.deltaTime;
-            _elapsedTime += delta;
+            float deltaTime = Time.deltaTime;
+            
+            _gravityCurrentSpeed += 9.807f * deltaTime * Vector3.down;
+            _windCurrentSpeed += WindFactor * deltaTime * _windDirection;
 
-            transform.Translate(
-                _direction.x * _speed * delta,
-                (_direction.y * _speed + (0.5f * Gravity * Mathf.Pow(_elapsedTime, 2.0f))) * delta,
-                _direction.z * _speed * delta,
-                Space.World);
+            Vector3 velocityCurrentOffset = _initialVelocity * deltaTime;
+            Vector3 gravityCurrentOffset = _gravityCurrentSpeed * deltaTime;
+            Vector3 windCurrentOffset = _windCurrentSpeed * deltaTime;
 
-            //Add wind
-            //_windVelocity = _windDirection * _elapsedTime * WindFactor;  //Same but time effect apply if bounce
-            _windVelocity += _windDirection * delta * WindFactor;
-            transform.Translate(_windVelocity * delta, Space.World);
-
+            transform.Translate(velocityCurrentOffset + gravityCurrentOffset + windCurrentOffset, Space.World);
 
 
             //Bounce, explode or stop flying ?
@@ -74,11 +73,10 @@ public class Projectile : MonoBehaviour
                 //Bounce ?
                 else if (_classPower == ProjectileClass.Bounce)
                 {
-                    float yVelocity = _speed + (0.5f * Gravity * Mathf.Pow(_elapsedTime, 2.0f));
+                    _initialVelocity *= 0.7f;
+                    _gravityCurrentSpeed = Vector3.zero;
 
-                    if (Mathf.Abs(yVelocity) >= _yVelocityThreshold) 
-                        _elapsedTime = - _elapsedTime * _bounceEnergyTransfer;
-                    else
+                    if (_initialVelocity.y < _verticalBounceSpeedThreshold)
                         IsFlying = false;
                 }
 
@@ -102,9 +100,7 @@ public class Projectile : MonoBehaviour
     public void Throw(float initialSpeed)
     {
         IsFlying = true;
-        _direction = transform.up;
-        _speed = initialSpeed;
-        _elapsedTime = 0;
         _trailRenderer.emitting = true;
+        _initialVelocity = transform.up * initialSpeed;
     }
 }

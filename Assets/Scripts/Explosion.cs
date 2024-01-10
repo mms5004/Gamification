@@ -13,8 +13,8 @@ public class Explosion : MonoBehaviour
         {
             if (hit.transform.tag == "Enemy" )
             {
-                EnemyBehaviour Ennemy = hit.transform.parent.gameObject.GetComponent<EnemyBehaviour>();
-                Ennemy.Die();
+                Enemy enemy = hit.transform.parent.gameObject.GetComponent<Enemy>();
+                enemy.Die();
             }            
         }
         StartCoroutine(KillYourself());
