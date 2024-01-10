@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Numerics;
 using Unity.VisualScripting;
 using UnityEditor;
@@ -16,10 +17,16 @@ public enum CatapultState
     Armed, Throwing, Reloading, Unarmed
 }
 
+public enum VisualisationState
+{
+    FadeIn, Running, FadeOut, Stopped
+}
+
 public class Catapult : MonoBehaviour
 {
     [Header("Catapult Elements")]
     [SerializeField] private Arm _arm;
+    [SerializeField] private GameObject _armPivot;
     [SerializeField] private GameObject _projectile;
     [SerializeField] private GameObject _reloadMechanism;
     [SerializeField] private ProjectileClass _currentProjectileClass;
@@ -27,6 +34,7 @@ public class Catapult : MonoBehaviour
     [Header("Variables")]
     [SerializeField] private float _reloadingTime = 2;
     private float _reloadRotationSpeed = 0;
+
     [SerializeField] private float _startAngle = 6;
     [SerializeField] private float _endAngle = 77;
     private float _currentArmAngle = 0;
@@ -41,25 +49,24 @@ public class Catapult : MonoBehaviour
     private Quaternion _spawnProjectileRotation;
 
     [Header("Visualization")]
-    public LineRenderer _lineRenderer;
-    [Tooltip("Render the projectile until that timing, sample independent")]
-    public float _timeRenderer;
-    public int _samples;
+    [SerializeField] private LineRenderer _lineRenderer;
+    [Tooltip("Render the projectile until that timing, sample independent"), SerializeField] private float _timeRenderer;
+    [SerializeField] private int _samples;
 
-    public Gradient _gradientColor;
-    public float _fadeInDuration;
-    public float _fadeOutDuration;
+    [SerializeField] private float _fadeInDuration;
+    [SerializeField] private float _fadeOutDuration;
+    [SerializeField] private Gradient _gradientColor;
 
     private Coroutine _visualizationCoroutine;
-
-    public bool WantsToDisplayVisualization = false;
+    private VisualisationState _visualizationState = VisualisationState.Stopped;
+    public bool WantsToVisualize = false;
 
 
     private void Start()
     {
         UpdateThrowingVariables();
 
-        _arm.ProjectileSpawnLocation.transform.GetPositionAndRotation(out _spawnProjectilePosition, out _spawnProjectileRotation);
+        _arm.ProjectileSpawn.transform.GetPositionAndRotation(out _spawnProjectilePosition, out _spawnProjectileRotation);
     }
 
     private void UpdateThrowingVariables()
@@ -91,7 +98,7 @@ public class Catapult : MonoBehaviour
     {
         if (_currentProjectile != null && !_currentProjectile.IsFlying)
         {
-            _arm.ProjectileSpawnLocation.transform.GetPositionAndRotation(out _spawnProjectilePosition, out _spawnProjectileRotation);
+            _arm.ProjectileSpawn.transform.GetPositionAndRotation(out _spawnProjectilePosition, out _spawnProjectileRotation);
 
             _currentProjectile.transform.SetPositionAndRotation(_spawnProjectilePosition, _spawnProjectileRotation);
         }
@@ -106,9 +113,7 @@ public class Catapult : MonoBehaviour
     public void TryThrow()
     {
         if (_state == CatapultState.Armed)
-        {
             _state = CatapultState.Throwing;
-        }
     }
 
     private void Throw()
@@ -117,6 +122,8 @@ public class Catapult : MonoBehaviour
 
         if (_currentArmAngle >= _endAngle)
         {
+            
+            Debug.Log("Actual pos : " + _arm.ProjectileSpawn.transform.position);
             _currentProjectile.Throw(_throwingSpeed);
             _currentProjectile = null;
             _state = CatapultState.Reloading;
@@ -135,28 +142,37 @@ public class Catapult : MonoBehaviour
     private void Rearmed()
     {
        _currentProjectile = Instantiate(_projectile, _spawnProjectilePosition, _spawnProjectileRotation).GetComponent<Projectile>();
-        _currentProjectile._classPower = _currentProjectileClass;
+        _currentProjectile.ClassPower = _currentProjectileClass;
         _state = CatapultState.Armed;
 
-        if(WantsToDisplayVisualization)
-            StartVisualization();
+        if (WantsToVisualize)
+            TryStartVisualization();
     }
 
-    public void StartVisualization()
+    public void TryStartVisualization()
     {
-        _visualizationCoroutine = StartCoroutine(ThrowVisualization());
-        StartCoroutine(EnableVisualisation());
+        if (_state == CatapultState.Armed && _visualizationState == VisualisationState.Stopped)
+        {
+            _visualizationState = VisualisationState.FadeIn;
+            _visualizationCoroutine = StartCoroutine(ThrowVisualization());
+            StartCoroutine(FadeInVisualization());
+        }
     }
 
-    public void StopVisualization()
+    public void TryStopVisualization()
     {
-        StartCoroutine(DisableVisualisation());
+        if (_visualizationState == VisualisationState.Running)
+        {
+            _visualizationState = VisualisationState.FadeOut;
+            StopCoroutine(_visualizationCoroutine);
+            StartCoroutine(FadeOutVisualization());
+        }
     }
 
     //Trail visualization 
     private IEnumerator ThrowVisualization()
     {
-        while (true) //My favorite loop 
+        while (true) //My favorite loop - I let you this one
         {
             float elapsedTime = _timeRenderer / _samples;
 
@@ -164,17 +180,15 @@ public class Catapult : MonoBehaviour
 
             Projectile ProjectileScript = _projectile.GetComponent<Projectile>();
 
-            //Project the throwing starting position. Need a double check, not perfectly accurate
-            Vector3 pivotPoint = _arm.ProjectileSpawnLocation.transform.position +
-                                 _arm.ProjectileSpawnLocation.transform.forward * _arm.Length;
-            Vector3 relativeStartPosition = new Vector3(
-                0, 
-                Mathf.Sin(_endAngle) * _arm.Length, 
-                Mathf.Cos(_endAngle) * _arm.Length);
-            Vector3 currentPosition = pivotPoint + relativeStartPosition;
+            float distanceBetweenPivotAndSpawnPosition = (_spawnProjectilePosition - _armPivot.transform.position).magnitude;
+            Vector3 projectedRelativeSpawnPosition = new Vector3(
+                0,
+                Mathf.Sin(_endAngle) * distanceBetweenPivotAndSpawnPosition,
+                Mathf.Cos(_endAngle) * distanceBetweenPivotAndSpawnPosition);
 
-            //Vector3 direction = Quaternion.AngleAxis(_endAngle, Vector3.right) * _arm.ProjectileSpawnLocation.transform.up;
-            Vector3 direction = Quaternion.AngleAxis(_endAngle, _arm.ProjectileSpawnLocation.transform.right) * _arm.ProjectileSpawnLocation.transform.up;
+            Vector3 currentPosition = _armPivot.transform.position + projectedRelativeSpawnPosition;
+
+            Vector3 direction = Quaternion.AngleAxis(_endAngle, transform.right) * transform.up;
             Vector3 initialVelocity = direction * _throwingSpeed;
 
             Vector3 GravitySpeed = Vector3.zero;
@@ -191,7 +205,7 @@ public class Catapult : MonoBehaviour
                 }
                 else
                 {
-                    GravitySpeed += 9.807f * elapsedTime * Vector3.down;
+                    GravitySpeed += ProjectileScript.GravityFactor * elapsedTime * Vector3.down;
                     WindSpeed += ProjectileScript.WindFactor * elapsedTime * Wind.WindForward;
 
                     Vector3 velocityCurrentOffset = initialVelocity * elapsedTime;
@@ -199,23 +213,6 @@ public class Catapult : MonoBehaviour
                     Vector3 windCurrentOffset = WindSpeed * elapsedTime;
 
                     currentPosition += velocityCurrentOffset + gravityCurrentOffset + windCurrentOffset;
-
-
-                    //Based on Maxime's formula 
-                    // Gravity is time independent multiply by time step ?
-                    //*weird
-                    
-                    
-                    //float gravity = (0.5f * -9.81f * Mathf.Pow(localTime, 2.0f)) * elapsedTime;
-                    //currentPosition += Speed * elapsedTime + (gravity * Vector3.up);
-
-                    //add wind
-
-                    //WindSpeed = Wind.WindForward * localTime * ProjectileScript.WindFactor;
-                    //currentPosition += WindSpeed * elapsedTime;
-
-                    //float gravity = (0.5f * -9.81f * Mathf.Pow(localTime, 2));
-                    //Vector3 Pos = initPos + Speed * localTime + (gravity * Vector3.up);
 
                     _lineRenderer.SetPosition(i, currentPosition);
 
@@ -227,39 +224,48 @@ public class Catapult : MonoBehaviour
     }
 
     //Fade In
-    private IEnumerator EnableVisualisation()
+    private IEnumerator FadeInVisualization()
     {
         float elapsedTime = 0;
-        while (true) // yes I love while(true)
+
+        while(true) // yes I love while(true)
         {
             elapsedTime += Time.deltaTime;
             Vector4 alphaColor = new Vector4(1, 1, 1, elapsedTime / _fadeInDuration);
-            _lineRenderer.startColor = _gradientColor.colorKeys[0].color * alphaColor * 0.25f;
-            _lineRenderer.endColor = _gradientColor.colorKeys[1].color * alphaColor;
+            _lineRenderer.startColor = _gradientColor.colorKeys[0].color * alphaColor;
+            _lineRenderer.endColor = _gradientColor.colorKeys[1].color * alphaColor * 0.25f;
 
-            if(elapsedTime > _fadeInDuration) { break; }
+            if (elapsedTime > _fadeInDuration) break;
             yield return null;
-        }
-    }
-    //Fade Out
-    private IEnumerator DisableVisualisation()
-    {
-        float elapsedTime = 0;        
 
-        while (true) // anyways, why are you reading ?
+        }
+
+        _visualizationState = VisualisationState.Running;
+
+        if (!WantsToVisualize)
+            TryStopVisualization();
+    }
+
+    //Fade Out
+    private IEnumerator FadeOutVisualization()
+    {
+        float elapsedTime = 0;
+
+        while(true) // anyways, why are you reading ?
         {
             elapsedTime += Time.deltaTime;
             Vector4 alphaColor = new Vector4(1, 1, 1, _fadeOutDuration - elapsedTime / _fadeOutDuration);
             _lineRenderer.startColor = _gradientColor.colorKeys[0].color * alphaColor;
-            _lineRenderer.endColor = _gradientColor.colorKeys[1].color * alphaColor;
+            _lineRenderer.endColor = _gradientColor.colorKeys[1].color * alphaColor * 0.25f;
 
-            if (elapsedTime > _fadeOutDuration)
-            {
-                StopCoroutine(_visualizationCoroutine);
-                break;
-            }
+            if (elapsedTime > _fadeOutDuration) break;
             yield return null;
         }
+
+        _visualizationState = VisualisationState.Stopped;
+
+        if (WantsToVisualize)
+            TryStartVisualization();
     }
 
     /*private void OnDrawGizmos()

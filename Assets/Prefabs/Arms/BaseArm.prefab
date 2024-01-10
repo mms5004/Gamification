@@ -48,7 +48,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _beam: {fileID: 2519768250955054914}
   _basket: {fileID: 6360427603027145578}
-  <ProjectileSpawnLocation>k__BackingField: {fileID: 3036310228174251633}
+  <ProjectileSpawn>k__BackingField: {fileID: 3036310228174251633}
   <RotationSpeed>k__BackingField: 250
   <Length>k__BackingField: 10
 --- !u!1 &2317818561020274961

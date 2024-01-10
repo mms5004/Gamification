@@ -15,27 +15,24 @@ public enum ProjectileClass
 
 public class Projectile : MonoBehaviour
 {
-    public Vector3 GravityAcceleration = new Vector3(0, -9.81f, 0);
-    public float WindFactor = 0.01f;
-    public bool IsFlying { get; private set; } = false;
-    private Vector3 _direction;
-    private Vector3 _windVelocity;
-    private Vector3 _windDirection;
-
     [Header("Power")]
-    public ProjectileClass _classPower;
-    public GameObject _explosion;
-    public GameObject _freeze;
-    public GameObject _IA;
+    public ProjectileClass ClassPower;
+    [SerializeField] private GameObject _explosion;
+    [SerializeField] private GameObject _freeze;
+    [SerializeField] private GameObject _IA;
 
     [Header("Bounce")]
-    public float _verticalBounceSpeedThreshold = 1;
+    [SerializeField] private float _verticalBounceSpeedThreshold = 1;
 
     public TrailRenderer _trailRenderer;
+    public float GravityFactor => 9.80665f;
+    public float WindFactor => 0.01f;
+    public bool IsFlying { get; private set; }
 
     private Vector3 _initialVelocity;
     private Vector3 _gravityCurrentSpeed = Vector3.zero;
     private Vector3 _windCurrentSpeed = Vector3.zero;
+    private Vector3 _windDirection;
 
     // Start is called before the first frame update
     private void Start()
@@ -50,7 +47,7 @@ public class Projectile : MonoBehaviour
         {
             float deltaTime = Time.deltaTime;
             
-            _gravityCurrentSpeed += 9.807f * deltaTime * Vector3.down;
+            _gravityCurrentSpeed += GravityFactor * deltaTime * Vector3.down;
             _windCurrentSpeed += WindFactor * deltaTime * _windDirection;
 
             Vector3 velocityCurrentOffset = _initialVelocity * deltaTime;
@@ -64,14 +61,14 @@ public class Projectile : MonoBehaviour
             if (transform.position.y <= 0)
             {
                 //explode ?
-                if (_classPower == ProjectileClass.Explode)
+                if (ClassPower == ProjectileClass.Explode)
                 {
                     Instantiate(_explosion, transform.position, transform.rotation);
                     Destroy(gameObject);
                 }
 
                 //Bounce ?
-                else if (_classPower == ProjectileClass.Bounce)
+                else if (ClassPower == ProjectileClass.Bounce)
                 {
                     _initialVelocity *= 0.7f;
                     _gravityCurrentSpeed = Vector3.zero;
@@ -89,7 +86,7 @@ public class Projectile : MonoBehaviour
             
 
             //Angry bird click explosion
-            if(_classPower == ProjectileClass.Freeze && Input.GetMouseButtonDown(1))
+            if(ClassPower == ProjectileClass.Freeze && Input.GetMouseButtonDown(1))
             {
                 Instantiate(_freeze, transform.position + Vector3.up * 15.0f, Quaternion.identity);
                 Destroy(gameObject);

@@ -395,7 +395,9 @@ MonoBehaviour:
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
   _fadeInDuration: 0.5
-  _fadeOutDuration: 0
+  _fadeOutDuration: 0.5
+  WantsToVisualize: 0
+  ArmPivot: {fileID: 4361802415379621280}
 --- !u!1 &1760063506711149605
 GameObject:
   m_ObjectHideFlags: 0

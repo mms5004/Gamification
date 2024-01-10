@@ -49,15 +49,13 @@ public class Controller : MonoBehaviour
 
         if (Input.GetMouseButtonDown(0))
         {
-            if (_Catapult.WantsToDisplayVisualization)
-                _Catapult.StartVisualization();
-
-            _Catapult.WantsToDisplayVisualization = true;
+            _Catapult.WantsToVisualize = true;
+            _Catapult.TryStartVisualization();
         }
         if(Input.GetMouseButtonUp(0))
         {
-            _Catapult.StopVisualization();
-            _Catapult.WantsToDisplayVisualization = false;
+            _Catapult.WantsToVisualize = false;
+            _Catapult.TryStopVisualization();
             _Catapult.TryThrow();
         }
 

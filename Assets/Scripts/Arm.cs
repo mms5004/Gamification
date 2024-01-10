@@ -7,7 +7,7 @@ public class Arm : MonoBehaviour
     [Header("Elements")]
     [SerializeField] private GameObject _beam;
     [SerializeField] private GameObject _basket;
-    [field: SerializeField] public GameObject ProjectileSpawnLocation { get; private set; }
+    [field: SerializeField] public GameObject ProjectileSpawn { get; private set; }
 
     [field: Header("Variables")]
     [field: SerializeField] public float RotationSpeed { get; private set; } = 1f;
