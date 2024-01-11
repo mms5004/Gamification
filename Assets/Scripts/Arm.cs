@@ -10,7 +10,7 @@ public class Arm : MonoBehaviour
     [field: SerializeField] public GameObject ProjectileSpawn { get; private set; }
 
     [field: Header("Variables")]
-    [field: SerializeField] public float RotationSpeed { get; private set; } = 1f;
+    [field: SerializeField, Tooltip("In Deg/s")] public float RotationSpeed { get; private set; } = 1f;
     [field: SerializeField] public float Length { get; private set; } = 6;
 
 
@@ -23,7 +23,6 @@ public class Arm : MonoBehaviour
     private void Start()
     {
         Initialization();
-        Debug.Log(RotationSpeed);
     }
 
 

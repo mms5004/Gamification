@@ -25,22 +25,14 @@ public class Projectile : MonoBehaviour
     [SerializeField] private float _verticalBounceSpeedThreshold = 1;
 
     public TrailRenderer _trailRenderer;
-    public float GravityFactor => 9.80665f;
-    public float WindFactor => 0.01f;
+    [field: SerializeField] public float GravityFactor { get; } = 9.80665f;
+    [field: SerializeField] public float WindFactor { get; } = 3f;
     public bool IsFlying { get; private set; }
 
     private Vector3 _initialVelocity;
     private Vector3 _gravityCurrentSpeed = Vector3.zero;
     private Vector3 _windCurrentSpeed = Vector3.zero;
-    private Vector3 _windDirection;
 
-    // Start is called before the first frame update
-    private void Start()
-    {
-        _windDirection = Wind.WindForward;
-    }
-
-    // Update is called once per frame
     private void Update()
     {
         if (IsFlying)
@@ -48,7 +40,7 @@ public class Projectile : MonoBehaviour
             float deltaTime = Time.deltaTime;
             
             _gravityCurrentSpeed += GravityFactor * deltaTime * Vector3.down;
-            _windCurrentSpeed += WindFactor * deltaTime * _windDirection;
+            _windCurrentSpeed += WindFactor * deltaTime * Wind.WindForward;
 
             Vector3 velocityCurrentOffset = _initialVelocity * deltaTime;
             Vector3 gravityCurrentOffset = _gravityCurrentSpeed * deltaTime;

@@ -1,13 +1,6 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Numerics;
-using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.UIElements;
-using static UnityEditor.PlayerSettings;
+using static UnityEngine.GridBrushBase;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
 using Vector4 = UnityEngine.Vector4;
@@ -26,6 +19,8 @@ public class Catapult : MonoBehaviour
 {
     [Header("Catapult Elements")]
     [SerializeField] private Arm _arm;
+    [SerializeField] private GameObject _armStartingPoint;
+    [SerializeField] private GameObject _armEndingPoint;
     [SerializeField] private GameObject _armPivot;
     [SerializeField] private GameObject _projectile;
     [SerializeField] private GameObject _reloadMechanism;
@@ -35,11 +30,13 @@ public class Catapult : MonoBehaviour
     [SerializeField] private float _reloadingTime = 2;
     private float _reloadRotationSpeed = 0;
 
+    [field: SerializeField] public float ThrowingAngle { get; private set; } = 76;
     [SerializeField] private float _startAngle = 6;
-    [SerializeField] private float _endAngle = 77;
+    [SerializeField] private float _minPivotOffset = 0;
+    [SerializeField] private float _maxPivotOffset = 2.8f;
+
+    private float _currentPivotOffset = 0;
     private float _currentArmAngle = 0;
-    private float _throwingRangeAngle = 0;
-    private float _throwingArcLength = 0;
     private float _throwingSpeed = 0;
 
     private CatapultState _state = CatapultState.Unarmed;
@@ -50,11 +47,11 @@ public class Catapult : MonoBehaviour
 
     [Header("Visualization")]
     [SerializeField] private LineRenderer _lineRenderer;
-    [Tooltip("Render the projectile until that timing, sample independent"), SerializeField] private float _timeRenderer;
+    [Tooltip("Render the projectile until that timing, sample independent"), SerializeField] private float _timeRenderer = 5;
     [SerializeField] private int _samples;
 
-    [SerializeField] private float _fadeInDuration;
-    [SerializeField] private float _fadeOutDuration;
+    [SerializeField] private float _fadeInDuration = 0.5f;
+    [SerializeField] private float _fadeOutDuration = 0.5f;
     [SerializeField] private Gradient _gradientColor;
 
     private Coroutine _visualizationCoroutine;
@@ -62,19 +59,54 @@ public class Catapult : MonoBehaviour
     public bool WantsToVisualize = false;
 
 
+    private void OnValidate()
+    {
+        Initialization();
+    }
+
+
     private void Start()
     {
-        UpdateThrowingVariables();
+        Initialization();
+    }
 
+
+    private void Initialization()
+    {
+        UpdateThrowingVariables(ThrowingAngle);
         _arm.ProjectileSpawn.transform.GetPositionAndRotation(out _spawnProjectilePosition, out _spawnProjectileRotation);
     }
 
-    private void UpdateThrowingVariables()
+    public void UpdateThrowingVariables(float desiredAngle)
     {
-        _throwingRangeAngle = _endAngle - _startAngle;
-        _throwingArcLength = Mathf.PI * _arm.Length * _throwingRangeAngle / 180;
-        _throwingSpeed = _throwingArcLength * _arm.RotationSpeed / _throwingRangeAngle;
-        _reloadRotationSpeed = -_throwingRangeAngle / _reloadingTime;
+        ThrowingAngle = desiredAngle;
+
+        Vector3 pivotPosition = _armPivot.transform.localPosition;
+        Vector3 endingPointPosition = _armEndingPoint.transform.localPosition;
+        float endingPointHeight = endingPointPosition.y - pivotPosition.y;
+        float endingPointLateralOffset = Mathf.Abs(endingPointPosition.z);
+
+        _currentPivotOffset = endingPointHeight / Mathf.Tan(desiredAngle * Mathf.Deg2Rad) - endingPointLateralOffset;
+
+        if (_currentPivotOffset < _minPivotOffset)
+        {
+            _currentPivotOffset = _minPivotOffset;
+            ThrowingAngle = Mathf.Rad2Deg * Mathf.Atan2(endingPointHeight, _currentPivotOffset + endingPointLateralOffset);
+
+        }
+
+        if (_currentPivotOffset > _maxPivotOffset)
+        {
+            _currentPivotOffset = _maxPivotOffset;
+            ThrowingAngle = Mathf.Rad2Deg * Mathf.Atan2(endingPointHeight, _currentPivotOffset + endingPointLateralOffset);
+        }
+        _armPivot.transform.localPosition = new Vector3(pivotPosition.x, pivotPosition.y, _currentPivotOffset);
+
+        float throwingRangeAngle = ThrowingAngle - _startAngle;
+        float throwingArcLength = _arm.Length * throwingRangeAngle * Mathf.Deg2Rad;
+
+        _throwingSpeed = throwingArcLength * _arm.RotationSpeed / throwingRangeAngle;
+        _reloadRotationSpeed = -throwingRangeAngle / _reloadingTime;
     }
 
     // Update is called once per frame
@@ -106,8 +138,9 @@ public class Catapult : MonoBehaviour
 
     private void RotateArm(float rotationSpeed)
     {
-        _arm.transform.Rotate(Vector3.right, rotationSpeed * Time.deltaTime);
-        _currentArmAngle = _arm.transform.eulerAngles.x;
+        _currentArmAngle = Mathf.Clamp(_currentArmAngle + rotationSpeed * Time.deltaTime, _startAngle, ThrowingAngle);
+        _arm.transform.localRotation = Quaternion.AngleAxis(_currentArmAngle, Vector3.right);
+
     }
 
     public void TryThrow()
@@ -120,10 +153,10 @@ public class Catapult : MonoBehaviour
     {
         RotateArm(_arm.RotationSpeed);
 
-        if (_currentArmAngle >= _endAngle)
+        if (_currentArmAngle >= ThrowingAngle)
         {
-            
-            Debug.Log("Actual pos : " + _arm.ProjectileSpawn.transform.position);
+            Debug.Log("Actual Angle" + _currentProjectile.transform.up);
+            Debug.Log("Actual Position" + _currentProjectile.transform.position);
             _currentProjectile.Throw(_throwingSpeed);
             _currentProjectile = null;
             _state = CatapultState.Reloading;
@@ -174,49 +207,45 @@ public class Catapult : MonoBehaviour
     {
         while (true) //My favorite loop - I let you this one
         {
-            float elapsedTime = _timeRenderer / _samples;
+            float deltaTime = _timeRenderer / _samples;
 
             _lineRenderer.positionCount = _samples;
 
             Projectile ProjectileScript = _projectile.GetComponent<Projectile>();
 
-            float distanceBetweenPivotAndSpawnPosition = (_spawnProjectilePosition - _armPivot.transform.position).magnitude;
-            Vector3 projectedRelativeSpawnPosition = new Vector3(
-                0,
-                Mathf.Sin(_endAngle) * distanceBetweenPivotAndSpawnPosition,
-                Mathf.Cos(_endAngle) * distanceBetweenPivotAndSpawnPosition);
+            Quaternion rotation = Quaternion.AngleAxis(180 + ThrowingAngle, transform.right);
+            Vector3 offset = _armPivot.transform.forward * (_spawnProjectilePosition - _armPivot.transform.position).magnitude;
 
-            Vector3 currentPosition = _armPivot.transform.position + projectedRelativeSpawnPosition;
-
-            Vector3 direction = Quaternion.AngleAxis(_endAngle, transform.right) * transform.up;
+            Vector3 currentPosition = _armPivot.transform.position + rotation * offset;
+            Vector3 direction = (Quaternion.AngleAxis(ThrowingAngle, transform.right) * transform.up).normalized;
             Vector3 initialVelocity = direction * _throwingSpeed;
 
-            Vector3 GravitySpeed = Vector3.zero;
-            Vector3 WindSpeed = Vector3.zero;
+            Vector3 gravitySpeed = Vector3.zero;
+            Vector3 windSpeed = Vector3.zero;
 
-            bool Impact = false;
+            bool impact = false;
 
             //set individually each point of the array
             for (int i = 0; i < _samples; i++)
             {
-                if (Impact)
+                if (impact)
                 {
                     _lineRenderer.SetPosition(i, currentPosition);
                 }
                 else
                 {
-                    GravitySpeed += ProjectileScript.GravityFactor * elapsedTime * Vector3.down;
-                    WindSpeed += ProjectileScript.WindFactor * elapsedTime * Wind.WindForward;
+                    gravitySpeed += ProjectileScript.GravityFactor * deltaTime * Vector3.down;
+                    windSpeed += ProjectileScript.WindFactor * deltaTime * Wind.WindForward;
 
-                    Vector3 velocityCurrentOffset = initialVelocity * elapsedTime;
-                    Vector3 gravityCurrentOffset = GravitySpeed * elapsedTime;
-                    Vector3 windCurrentOffset = WindSpeed * elapsedTime;
+                    Vector3 velocityCurrentOffset = initialVelocity * deltaTime;
+                    Vector3 gravityCurrentOffset = gravitySpeed * deltaTime;
+                    Vector3 windCurrentOffset = windSpeed * deltaTime;
 
                     currentPosition += velocityCurrentOffset + gravityCurrentOffset + windCurrentOffset;
 
                     _lineRenderer.SetPosition(i, currentPosition);
 
-                    if (currentPosition.y < 0.0f) { Impact = true; }
+                    if (currentPosition.y < 0.0f) { impact = true; }
                 }
             }
             yield return null;

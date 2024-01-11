@@ -6582,6 +6582,14 @@ PrefabInstance:
       propertyPath: _fadeOutSpeed
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 5279023112429790121, guid: c9894082ae188df45997d781d35d9cbe, type: 3}
+      propertyPath: _fadeOutDuration
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8113900235747808222, guid: c9894082ae188df45997d781d35d9cbe, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 2.7999995
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

@@ -42,10 +42,16 @@ public class Controller : MonoBehaviour
         }
         //camera distance
         float Scroll = Input.GetAxis("Mouse ScrollWheel");
-        _CameraDistance -= Scroll * _ScrollSpeed;
-        _CameraDistance = Mathf.Clamp(_CameraDistance, _CameraDistanceMin, _CameraDistanceMax);
 
-        Camera.transform.localPosition =  Camera.transform.localPosition.normalized * _CameraDistance;
+        if (Scroll != 0)
+        {
+            /*_CameraDistance -= Scroll * _ScrollSpeed;
+            _CameraDistance = Mathf.Clamp(_CameraDistance, _CameraDistanceMin, _CameraDistanceMax);
+
+            Camera.transform.localPosition = Camera.transform.localPosition.normalized * _CameraDistance;*/
+
+            _Catapult.UpdateThrowingVariables(_Catapult.ThrowingAngle + Scroll * 20);
+        }
 
         if (Input.GetMouseButtonDown(0))
         {
