@@ -14,4 +14,29 @@ public class Menu : MonoBehaviour
     {
         Application.Quit();
     }
+
+    public void OnMenuButton()
+    {
+        SceneManager.LoadScene(0);
+    }
+
+    public void OnGameButton()
+    {
+        SceneManager.LoadScene(5);
+    }
+
+    public void OnLeaderBoardButton()
+    {
+        SceneManager.LoadScene(4);
+    }
+
+    public void OnProfileButton()
+    {
+        SceneManager.LoadScene(2);
+    }
+
+    public void OnSuccessButton()
+    {
+        SceneManager.LoadScene(3);
+    }
 }
