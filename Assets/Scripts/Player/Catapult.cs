@@ -17,30 +17,28 @@ public enum VisualisationState
 
 public class Catapult : MonoBehaviour
 {
-    [Header("Catapult Elements")]
+    [Header("Elements")]
     [SerializeField] private Arm _arm;
-    [SerializeField] private GameObject _armStartingPoint;
-    [SerializeField] private GameObject _armEndingPoint;
+    [SerializeField] private ReloadMechanism _reloadMechanism;
     [SerializeField] private GameObject _armPivot;
+    [SerializeField] private GameObject _reloadPivot;
+    [SerializeField] private GameObject _armEndingPoint;
     [SerializeField] private GameObject _projectile;
-    [SerializeField] private GameObject _reloadMechanism;
     [SerializeField] private ProjectileClass _currentProjectileClass;
 
-    [Header("Variables")]
-    [SerializeField] private float _reloadingTime = 2;
-    private float _reloadRotationSpeed = 0;
-
+    [field: Header("Variables")]
     [field: SerializeField] public float ThrowingAngle { get; private set; } = 76;
     [SerializeField] private float _startAngle = 6;
     [SerializeField] private float _minPivotOffset = 0;
     [SerializeField] private float _maxPivotOffset = 2.8f;
 
-    private float _currentPivotOffset = 0;
-    private float _currentArmAngle = 0;
-    private float _throwingSpeed = 0;
+    private float _currentPivotOffset;
+    private float _currentArmAngle;
+    private float _throwingSpeed; 
+    private float _reloadRotationSpeed;
 
     private CatapultState _state = CatapultState.Unarmed;
-    private Projectile _currentProjectile = null;
+    private Projectile _currentProjectile;
 
     private Vector3 _spawnProjectilePosition;
     private Quaternion _spawnProjectileRotation;
@@ -74,7 +72,7 @@ public class Catapult : MonoBehaviour
     private void Initialization()
     {
         UpdateThrowingVariables(ThrowingAngle);
-        _arm.ProjectileSpawn.transform.GetPositionAndRotation(out _spawnProjectilePosition, out _spawnProjectileRotation);
+        _arm.ProjectileSpawnPoint.transform.GetPositionAndRotation(out _spawnProjectilePosition, out _spawnProjectileRotation);
     }
 
     public void UpdateThrowingVariables(float desiredAngle)
@@ -106,7 +104,7 @@ public class Catapult : MonoBehaviour
         float throwingArcLength = _arm.Length * throwingRangeAngle * Mathf.Deg2Rad;
 
         _throwingSpeed = throwingArcLength * _arm.RotationSpeed / throwingRangeAngle;
-        _reloadRotationSpeed = -throwingRangeAngle / _reloadingTime;
+        _reloadRotationSpeed = throwingRangeAngle / _reloadMechanism.RotationTime;
     }
 
     // Update is called once per frame
@@ -130,7 +128,7 @@ public class Catapult : MonoBehaviour
     {
         if (_currentProjectile != null && !_currentProjectile.IsFlying)
         {
-            _arm.ProjectileSpawn.transform.GetPositionAndRotation(out _spawnProjectilePosition, out _spawnProjectileRotation);
+            _arm.ProjectileSpawnPoint.transform.GetPositionAndRotation(out _spawnProjectilePosition, out _spawnProjectileRotation);
 
             _currentProjectile.transform.SetPositionAndRotation(_spawnProjectilePosition, _spawnProjectileRotation);
         }
@@ -155,9 +153,9 @@ public class Catapult : MonoBehaviour
 
         if (_currentArmAngle >= ThrowingAngle)
         {
-            Debug.Log("Actual Angle" + _currentProjectile.transform.up);
-            Debug.Log("Actual Position" + _currentProjectile.transform.position);
-            _currentProjectile.Throw(_throwingSpeed);
+            Vector3 direction = Quaternion.AngleAxis(ThrowingAngle, transform.right) * transform.up;
+
+            _currentProjectile.Throw(_throwingSpeed, direction);
             _currentProjectile = null;
             _state = CatapultState.Reloading;
         }
@@ -165,8 +163,8 @@ public class Catapult : MonoBehaviour
 
     private void Reload()
     {
-        RotateArm(_reloadRotationSpeed);
-        _reloadMechanism.transform.Rotate(Vector3.up, 5 * _reloadRotationSpeed * Time.deltaTime);
+        RotateArm(-_reloadRotationSpeed);
+        _reloadPivot.transform.Rotate(Vector3.up, 5 * _reloadRotationSpeed * Time.deltaTime);
 
         if (_currentArmAngle <= _startAngle)
             _state = CatapultState.Unarmed;
@@ -213,11 +211,12 @@ public class Catapult : MonoBehaviour
 
             Projectile ProjectileScript = _projectile.GetComponent<Projectile>();
 
-            Quaternion rotation = Quaternion.AngleAxis(180 + ThrowingAngle, transform.right);
-            Vector3 offset = _armPivot.transform.forward * (_spawnProjectilePosition - _armPivot.transform.position).magnitude;
+            Quaternion rotation = Quaternion.AngleAxis(180 + (ThrowingAngle - _startAngle), transform.right);
+            float distanceBetweenPivotAndSpawnPosition = (_spawnProjectilePosition - _armPivot.transform.position).magnitude;
+            Vector3 offset = _arm.ProjectileSpawnPoint.transform.forward * distanceBetweenPivotAndSpawnPosition;
 
             Vector3 currentPosition = _armPivot.transform.position + rotation * offset;
-            Vector3 direction = (Quaternion.AngleAxis(ThrowingAngle, transform.right) * transform.up).normalized;
+            Vector3 direction = Quaternion.AngleAxis(ThrowingAngle, transform.right) * transform.up;
             Vector3 initialVelocity = direction * _throwingSpeed;
 
             Vector3 gravitySpeed = Vector3.zero;

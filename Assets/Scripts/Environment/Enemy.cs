@@ -1,6 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Enemy : MonoBehaviour
@@ -8,12 +5,12 @@ public class Enemy : MonoBehaviour
     [SerializeField] private float _speed;
 
     private GameObject _target;
-    private EnemyManager _spawnManager;
+    private EnemyManager _enemyManager;
 
-    public void Initialize(GameObject target, EnemyManager spawnManager)
+    public void Initialize(GameObject target, EnemyManager enemyManager)
     {
         _target = target;
-        _spawnManager = spawnManager;
+        _enemyManager = enemyManager;
     }
 
     public void MoveToTarget()
@@ -28,11 +25,12 @@ public class Enemy : MonoBehaviour
             Die();
         }
     }
+
     public void Die()
     {
-        _spawnManager.DespawnTarget(this);
-        Destroy(this.gameObject);
+        _enemyManager.RemoveEnemy(this);
     }
+
     public void Freeze()
     {
         _speed = 0;

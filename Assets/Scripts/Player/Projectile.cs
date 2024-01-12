@@ -86,10 +86,10 @@ public class Projectile : MonoBehaviour
         }
     }
 
-    public void Throw(float initialSpeed)
+    public void Throw(float initialSpeed, Vector3 direction)
     {
         IsFlying = true;
         _trailRenderer.emitting = true;
-        _initialVelocity = transform.up * initialSpeed;
+        _initialVelocity = direction * initialSpeed;
     }
 }
