@@ -19,7 +19,7 @@ public class Projectile : MonoBehaviour
     public ProjectileClass ClassPower;
     [SerializeField] private GameObject _explosion;
     [SerializeField] private GameObject _freeze;
-    [SerializeField] private GameObject _IA;
+    [SerializeField] private GameObject _damageZone;
 
     [Header("Bounce")]
     [SerializeField] private float _verticalBounceSpeedThreshold = 1;
@@ -66,13 +66,13 @@ public class Projectile : MonoBehaviour
                     _gravityCurrentSpeed = Vector3.zero;
 
                     if (_initialVelocity.y < _verticalBounceSpeedThreshold)
-                        IsFlying = false;
+                        Destroy(gameObject);
                 }
 
                 //Heck no, stop flying !
                 else
                 {
-                    IsFlying = false;
+                    Destroy(gameObject);
                 }
             }      
             
@@ -91,5 +91,12 @@ public class Projectile : MonoBehaviour
         IsFlying = true;
         _trailRenderer.emitting = true;
         _initialVelocity = direction * initialSpeed;
+
+
+        if (ClassPower != ProjectileClass.Freeze)
+        {
+            GameObject damageZoneObject = Instantiate(_damageZone, transform.position, transform.rotation);
+            damageZoneObject.transform.parent = this.transform;
+        }
     }
 }

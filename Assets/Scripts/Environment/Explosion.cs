@@ -6,7 +6,7 @@ public class Explosion : MonoBehaviour
 {
     public float Radius = 15.0f;
     public float waitToDelete = 5.0f;
-    void Start()
+    void Update()
     {
         RaycastHit[] collisions = Physics.SphereCastAll(transform.position, Radius, Vector3.one);
         foreach (RaycastHit hit in collisions)
