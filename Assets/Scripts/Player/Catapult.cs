@@ -24,7 +24,8 @@ public class Catapult : MonoBehaviour
     [SerializeField] private GameObject _reloadPivot;
     [SerializeField] private GameObject _armEndingPoint;
     [SerializeField] private GameObject _projectile;
-    [SerializeField] private ProjectileClass _currentProjectileClass;
+    [SerializeField] private GameObject _floortarget;
+    public ProjectileClass _currentProjectileClass;
 
     [field: Header("Variables")]
     [field: SerializeField] public float ThrowingAngle { get; private set; } = 76;
@@ -73,6 +74,15 @@ public class Catapult : MonoBehaviour
     {
         UpdateThrowingVariables(ThrowingAngle);
         _arm.ProjectileSpawnPoint.transform.GetPositionAndRotation(out _spawnProjectilePosition, out _spawnProjectileRotation);
+    }
+
+    public void OnServerInitialized()
+    {
+        if(_currentProjectile)
+        {
+            Destroy(_currentProjectile.gameObject);
+            _state = CatapultState.Unarmed;
+        }
     }
 
     public void UpdateThrowingVariables(float desiredAngle)
@@ -222,6 +232,7 @@ public class Catapult : MonoBehaviour
             Vector3 gravitySpeed = Vector3.zero;
             Vector3 windSpeed = Vector3.zero;
 
+
             bool impact = false;
 
             //set individually each point of the array
@@ -244,8 +255,17 @@ public class Catapult : MonoBehaviour
 
                     _lineRenderer.SetPosition(i, currentPosition);
 
-                    if (currentPosition.y < 0.0f) { impact = true; }
+                    if (currentPosition.y < 0.0f) 
+                    {
+                        _floortarget.SetActive(true);
+                        _floortarget.transform.position = new Vector3(currentPosition.x,0, currentPosition.z) + Vector3.up * 0.05f;
+                        impact = true; 
+                    }
                 }
+            }
+            if (!impact)
+            {
+                _floortarget.SetActive(false);
             }
             yield return null;
         }
@@ -282,14 +302,14 @@ public class Catapult : MonoBehaviour
         while(true) // anyways, why are you reading ?
         {
             elapsedTime += Time.deltaTime;
-            Vector4 alphaColor = new Vector4(1, 1, 1, _fadeOutDuration - elapsedTime / _fadeOutDuration);
+            Vector4 alphaColor = new Vector4(1, 1, 1, 1 - elapsedTime / _fadeOutDuration);
             _lineRenderer.startColor = _gradientColor.colorKeys[0].color * alphaColor;
-            _lineRenderer.endColor = _gradientColor.colorKeys[1].color * alphaColor * 0.25f;
+            _lineRenderer.endColor = _gradientColor.colorKeys[1].color * alphaColor * 0.5f;
 
             if (elapsedTime > _fadeOutDuration) break;
             yield return null;
         }
-
+        _floortarget.SetActive(false);
         _visualizationState = VisualisationState.Stopped;
 
         if (WantsToVisualize)

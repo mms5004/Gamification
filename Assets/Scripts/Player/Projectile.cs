@@ -20,13 +20,14 @@ public class Projectile : MonoBehaviour
     [SerializeField] private GameObject _explosion;
     [SerializeField] private GameObject _freeze;
     [SerializeField] private GameObject _damageZone;
+    [SerializeField] private GameObject[] _projectileType;
 
     [Header("Bounce")]
     [SerializeField] private float _verticalBounceSpeedThreshold = 1;
 
     public TrailRenderer _trailRenderer;
     [field: SerializeField] public float GravityFactor { get; } = 9.80665f;
-    [field: SerializeField] public float WindFactor { get; } = 3f;
+    [field: SerializeField] public float WindFactor = 3f;
     public bool IsFlying { get; private set; }
 
     private Vector3 _initialVelocity;
@@ -97,6 +98,27 @@ public class Projectile : MonoBehaviour
         {
             GameObject damageZoneObject = Instantiate(_damageZone, transform.position, transform.rotation);
             damageZoneObject.transform.parent = this.transform;
+        }
+    }
+
+    private void Start()
+    {
+        if(ClassPower == ProjectileClass.Bounce)
+        {
+            _projectileType[0].SetActive(false);
+            _projectileType[1].SetActive(true);
+            WindFactor = 1.0f;
+        }
+        else if (ClassPower == ProjectileClass.Explode)
+        {
+            _projectileType[0].SetActive(false);
+            _projectileType[2].SetActive(true);
+        }
+        else if (ClassPower == ProjectileClass.Freeze)
+        {
+            _projectileType[0].SetActive(false);
+            _projectileType[3].SetActive(true);
+            WindFactor = 25.0f;
         }
     }
 }
