@@ -26,6 +26,7 @@ public class Catapult : MonoBehaviour
     [SerializeField] private GameObject _projectile;
     [SerializeField] private GameObject _floortarget;
     public ProjectileClass _currentProjectileClass;
+    public ArmEnum _currentArmClass;
 
     [field: Header("Variables")]
     [field: SerializeField] public float ThrowingAngle { get; private set; } = 76;
@@ -40,6 +41,7 @@ public class Catapult : MonoBehaviour
 
     private CatapultState _state = CatapultState.Unarmed;
     private Projectile _currentProjectile;
+
 
     private Vector3 _spawnProjectilePosition;
     private Quaternion _spawnProjectileRotation;
@@ -83,7 +85,22 @@ public class Catapult : MonoBehaviour
             Destroy(_currentProjectile.gameObject);
             _state = CatapultState.Unarmed;
         }
+
+        
+       
     }
+
+    public void OnChangeArm(Arm equippedArm)
+    {
+        if (_arm)
+        {
+            Destroy(_arm.gameObject);
+            _state = CatapultState.Unarmed;
+            Arm instantiatedArm = Instantiate(equippedArm);
+            _arm = instantiatedArm;
+        }
+    }
+
 
     public void UpdateThrowingVariables(float desiredAngle)
     {
