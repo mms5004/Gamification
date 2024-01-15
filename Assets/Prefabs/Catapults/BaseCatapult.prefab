@@ -173,14 +173,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1014385519278362610}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 9, z: -18}
+  m_LocalRotation: {x: 0.08715578, y: 0, z: 0, w: 0.9961947}
+  m_LocalPosition: {x: 0, y: 12, z: -20}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 660918472366951013}
   m_Father: {fileID: 539497806596081501}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 10, y: 0, z: 0}
 --- !u!1 &1098516086845250586
 GameObject:
   m_ObjectHideFlags: 0
@@ -361,6 +361,7 @@ MonoBehaviour:
   _reloadPivot: {fileID: 8026182920849623325}
   _armEndingPoint: {fileID: 2980237050860088778}
   _projectile: {fileID: 2919123707426022288, guid: 7c62fb5662984094ab3411458487c638, type: 3}
+  _floortarget: {fileID: 0}
   _currentProjectileClass: 0
   <ThrowingAngle>k__BackingField: 76
   _startAngle: 6
@@ -1363,7 +1364,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 6456434910727502073}
   - {fileID: 4375934814583007548}
   - {fileID: 5376164507446156279}
   m_Father: {fileID: 6691319947991306292}
@@ -2479,12 +2479,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7830179831235520889}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.052335896, y: -0, z: -0, w: 0.9986295}
-  m_LocalPosition: {x: 0, y: 0, z: -6.7}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 8113900235747808222}
+  m_Father: {fileID: 6691319947991306292}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!120 &5105575861447601393
 LineRenderer:
@@ -3191,6 +3191,7 @@ Transform:
   - {fileID: 2293502303280711766}
   - {fileID: 2987773946759398342}
   - {fileID: 8467156781478569077}
+  - {fileID: 6456434910727502073}
   - {fileID: 8113900235747808222}
   - {fileID: 3838452208573377948}
   m_Father: {fileID: 539497806596081501}
@@ -3701,7 +3702,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1209523996465228491, guid: 78e60ec2abea5af49a16d1b0ce383576, type: 3}
       propertyPath: m_Name
-      value: BaseArm
+      value: MediumArm
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

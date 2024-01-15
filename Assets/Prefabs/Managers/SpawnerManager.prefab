@@ -55,7 +55,7 @@ MonoBehaviour:
   - Duration: 15
     SpawnDelay: 2
     ActivatedSpawnerNumber: 3
-  _minSpawnerDistance: 150
-  _maxSpawnerDistance: 200
+  _minSpawnerDistance: 250
+  _maxSpawnerDistance: 300
   _spawnerNumber: 3
   _waveDelay: 10

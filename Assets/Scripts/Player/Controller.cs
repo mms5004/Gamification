@@ -25,6 +25,7 @@ public class Controller : MonoBehaviour
     private Catapult _Catapult;
 
     static public float _XSlide;
+    static public Rigidbody _RigidBody;
 
     void Start()
     {
@@ -32,6 +33,7 @@ public class Controller : MonoBehaviour
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
         Camera.transform.localPosition =  Camera.transform.localPosition.normalized * _CameraDistance;
+        _RigidBody = GetComponent<Rigidbody>();
     }
 
     void Update()
@@ -61,7 +63,6 @@ public class Controller : MonoBehaviour
         if(Input.GetMouseButtonUp(0))
         {
             _Catapult.WantsToVisualize = false;
-            _Catapult.TryStopVisualization();
             _Catapult.TryThrow();
         }
 
@@ -93,12 +94,17 @@ public class Controller : MonoBehaviour
         Vector3 Dir = transform.right * _XSlide + transform.forward;
         if (Input.GetKey(KeyCode.W))
         {
-            transform.position += Dir * Time.deltaTime * CamSpeed;
+            _RigidBody.velocity = Dir * CamSpeed;
             WheelForward();
         }
         if (Input.GetKey(KeyCode.S))
         {
-            transform.position -= Dir * Time.deltaTime * CamSpeed;
+            _RigidBody.velocity = -Dir * CamSpeed;
+            WheelForward();
+        }
+        if (!Input.GetKey(KeyCode.W) && !Input.GetKey(KeyCode.S))
+        {
+            _RigidBody.velocity = Vector3.zero;
             WheelForward();
         }
         //if (Input.GetKey(KeyCode.D))

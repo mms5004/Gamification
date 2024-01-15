@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using static UnityEngine.GridBrushBase;
@@ -26,7 +27,6 @@ public class Catapult : MonoBehaviour
     [SerializeField] private GameObject _projectile;
     [SerializeField] private GameObject _floortarget;
     public ProjectileClass _currentProjectileClass;
-    public ArmEnum _currentArmClass;
 
     [field: Header("Variables")]
     [field: SerializeField] public float ThrowingAngle { get; private set; } = 76;
@@ -78,26 +78,30 @@ public class Catapult : MonoBehaviour
         _arm.ProjectileSpawnPoint.transform.GetPositionAndRotation(out _spawnProjectilePosition, out _spawnProjectileRotation);
     }
 
-    public void OnServerInitialized()
+    public void OnChangeProjectile(ProjectileClass Type)
     {
-        if(_currentProjectile)
-        {
-            Destroy(_currentProjectile.gameObject);
-            _state = CatapultState.Unarmed;
-        }
+        if(_currentProjectile) Destroy(_currentProjectile.gameObject);
 
-        
-       
+        _currentProjectileClass = Type;
+        _state = CatapultState.Reloading;
     }
 
     public void OnChangeArm(Arm equippedArm)
     {
         if (_arm)
         {
+            if(_currentProjectile) Destroy(_currentProjectile.gameObject);
+
+            Vector3 position = _arm.transform.position;
+            Quaternion rotation = _arm.transform.rotation;
+
             Destroy(_arm.gameObject);
-            _state = CatapultState.Unarmed;
-            Arm instantiatedArm = Instantiate(equippedArm);
-            _arm = instantiatedArm;
+            _state = CatapultState.Reloading;
+
+            _arm = Instantiate(equippedArm, position, rotation);
+            _arm.transform.parent = _armPivot.transform;
+
+            UpdateThrowingVariables(ThrowingAngle);
         }
     }
 
@@ -184,6 +188,7 @@ public class Catapult : MonoBehaviour
 
             _currentProjectile.Throw(_throwingSpeed, direction);
             _currentProjectile = null;
+            TryStopVisualization();
             _state = CatapultState.Reloading;
         }
     }
@@ -199,7 +204,7 @@ public class Catapult : MonoBehaviour
 
     private void Rearmed()
     {
-       _currentProjectile = Instantiate(_projectile, _spawnProjectilePosition, _spawnProjectileRotation).GetComponent<Projectile>();
+        _currentProjectile = Instantiate(_projectile, _spawnProjectilePosition, _spawnProjectileRotation).GetComponent<Projectile>();
         _currentProjectile.ClassPower = _currentProjectileClass;
         _state = CatapultState.Armed;
 
@@ -219,12 +224,9 @@ public class Catapult : MonoBehaviour
 
     public void TryStopVisualization()
     {
-        if (_visualizationState == VisualisationState.Running)
-        {
-            _visualizationState = VisualisationState.FadeOut;
-            StopCoroutine(_visualizationCoroutine);
-            StartCoroutine(FadeOutVisualization());
-        }
+        _visualizationState = VisualisationState.FadeOut;
+        StopCoroutine(_visualizationCoroutine);
+        StartCoroutine(FadeOutVisualization());
     }
 
     //Trail visualization 
@@ -240,7 +242,7 @@ public class Catapult : MonoBehaviour
 
             Quaternion rotation = Quaternion.AngleAxis(180 + (ThrowingAngle - _startAngle), transform.right);
             float distanceBetweenPivotAndSpawnPosition = (_spawnProjectilePosition - _armPivot.transform.position).magnitude;
-            Vector3 offset = _arm.ProjectileSpawnPoint.transform.forward * distanceBetweenPivotAndSpawnPosition;
+            Vector3 offset = transform.forward * distanceBetweenPivotAndSpawnPosition;
 
             Vector3 currentPosition = _armPivot.transform.position + rotation * offset;
             Vector3 direction = Quaternion.AngleAxis(ThrowingAngle, transform.right) * transform.up;
@@ -248,7 +250,6 @@ public class Catapult : MonoBehaviour
 
             Vector3 gravitySpeed = Vector3.zero;
             Vector3 windSpeed = Vector3.zero;
-
 
             bool impact = false;
 
@@ -304,11 +305,6 @@ public class Catapult : MonoBehaviour
             yield return null;
 
         }
-
-        _visualizationState = VisualisationState.Running;
-
-        if (!WantsToVisualize)
-            TryStopVisualization();
     }
 
     //Fade Out

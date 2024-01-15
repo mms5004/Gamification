@@ -38,17 +38,4 @@ public class ChangeCollider : MonoBehaviour
             print("bye");
         }
     }
-
-    private void Update()
-    {
-        if(Player != null)
-        {
-            if (Input.GetKeyDown(KeyCode.E))
-            {
-                Player._currentProjectileClass = ProjectileType;
-                _Text.gameObject.SetActive(false);
-                Player.OnServerInitialized();
-            }
-        }        
-    }
 }

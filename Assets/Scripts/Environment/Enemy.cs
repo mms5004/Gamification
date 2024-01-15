@@ -22,13 +22,13 @@ public class Enemy : MonoBehaviour
 
         if (rectangle.Contains(new Vector2(transform.position.x, transform.position.z)))
         {
-            Die();
+            Die(false);
         }
     }
 
-    public void Die()
+    public void Die(bool CountAsKill)
     {
-        _enemyManager.RemoveEnemy(this);
+        _enemyManager.RemoveEnemy(this, CountAsKill);
     }
 
     public void Freeze()

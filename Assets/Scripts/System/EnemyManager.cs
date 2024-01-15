@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -8,6 +9,10 @@ public class EnemyManager : MonoBehaviour
 {
     [SerializeField] private List<Enemy> _enemyList;
     [SerializeField] private GameObject _target;
+    [SerializeField] private TextMeshProUGUI _kills;
+    [SerializeField] private int _killsNumber = 0;
+    [SerializeField] private int _looseNumber = 0;
+    [SerializeField] private PauseMenu _pauseSystem;
 
     private void Start()
     {
@@ -27,8 +32,23 @@ public class EnemyManager : MonoBehaviour
         _enemyList.Add(enemy);
     }
 
-    public void RemoveEnemy(Enemy enemy)
+    public void RemoveEnemy(Enemy enemy, bool Count)
     {
+        if (Count)
+        {
+            _killsNumber++;
+            _kills.text = _killsNumber.ToString();
+        }
+
+        else
+        {
+            _looseNumber++;
+            if (_looseNumber > 2)
+            {
+                _pauseSystem.Loose();
+            }
+        }
+
         _enemyList.Remove(enemy);
         Destroy(enemy.gameObject);
     }

@@ -220,6 +220,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4625941530140206211}
   - component: {fileID: 2663023017492942585}
+  - component: {fileID: 1139804008032746306}
   m_Layer: 0
   m_Name: Tower
   m_TagString: Untagged
@@ -237,7 +238,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 3, y: 3, z: 3}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5208551317801795507}
@@ -263,6 +264,27 @@ MonoBehaviour:
   _enemyClassList:
   - {fileID: 1882044814229213226, guid: a3b9a27d466d58b4385159894858361a, type: 3}
   SpawnDelay: 2
+--- !u!65 &1139804008032746306
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1238684237452294561}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 10, y: 20, z: 10}
+  m_Center: {x: 0, y: 10, z: 0}
 --- !u!1 &1485041612526615644
 GameObject:
   m_ObjectHideFlags: 0

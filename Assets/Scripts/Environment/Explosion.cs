@@ -14,7 +14,7 @@ public class Explosion : MonoBehaviour
             if (hit.transform.tag == "Enemy" )
             {
                 Enemy enemy = hit.transform.parent.gameObject.GetComponent<Enemy>();
-                enemy.Die();
+                enemy.Die(true);
             }            
         }
         StartCoroutine(KillYourself());

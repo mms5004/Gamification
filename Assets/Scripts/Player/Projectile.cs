@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static UnityEditor.PlayerSettings;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
 
@@ -33,6 +32,39 @@ public class Projectile : MonoBehaviour
     private Vector3 _initialVelocity;
     private Vector3 _gravityCurrentSpeed = Vector3.zero;
     private Vector3 _windCurrentSpeed = Vector3.zero;
+
+    private void Start()
+    {
+        Initialization();
+    }
+
+    private void Initialization()
+    {
+        foreach (var type in _projectileType)
+            type.SetActive(false);
+
+        if (ClassPower == ProjectileClass.Rock)
+        {
+            _projectileType[0].SetActive(true);
+        }
+
+        if (ClassPower == ProjectileClass.Bounce)
+        {
+            _projectileType[1].SetActive(true);
+            WindFactor = 1.0f;
+        }
+
+        else if (ClassPower == ProjectileClass.Explode)
+        {
+            _projectileType[2].SetActive(true);
+        }
+
+        else if (ClassPower == ProjectileClass.Freeze)
+        {
+            _projectileType[3].SetActive(true);
+            WindFactor = 25.0f;
+        }
+    }
 
     private void Update()
     {
@@ -98,27 +130,6 @@ public class Projectile : MonoBehaviour
         {
             GameObject damageZoneObject = Instantiate(_damageZone, transform.position, transform.rotation);
             damageZoneObject.transform.parent = this.transform;
-        }
-    }
-
-    private void Start()
-    {
-        if(ClassPower == ProjectileClass.Bounce)
-        {
-            _projectileType[0].SetActive(false);
-            _projectileType[1].SetActive(true);
-            WindFactor = 1.0f;
-        }
-        else if (ClassPower == ProjectileClass.Explode)
-        {
-            _projectileType[0].SetActive(false);
-            _projectileType[2].SetActive(true);
-        }
-        else if (ClassPower == ProjectileClass.Freeze)
-        {
-            _projectileType[0].SetActive(false);
-            _projectileType[3].SetActive(true);
-            WindFactor = 25.0f;
         }
     }
 }

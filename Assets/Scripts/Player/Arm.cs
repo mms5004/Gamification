@@ -2,11 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ArmEnum
-{
-     Base, Short, Long
-}
-
 public class Arm : MonoBehaviour
 {
     [Header("Elements")]
