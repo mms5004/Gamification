@@ -10,8 +10,9 @@ public class EnemyManager : MonoBehaviour
     [SerializeField] private List<Enemy> _enemyList;
     [SerializeField] private GameObject _target;
     [SerializeField] private TextMeshProUGUI _kills;
+    [SerializeField] private TextMeshProUGUI _loose;
     [SerializeField] private int _killsNumber = 0;
-    [SerializeField] private int _looseNumber = 0;
+    [SerializeField] private int _looseNumber = 10;
     [SerializeField] private PauseMenu _pauseSystem;
 
     private void Start()
@@ -42,8 +43,10 @@ public class EnemyManager : MonoBehaviour
 
         else
         {
-            _looseNumber++;
-            if (_looseNumber > 2)
+            _looseNumber--;
+            _loose.text = _looseNumber.ToString();
+
+            if (_looseNumber <= 0)
             {
                 _pauseSystem.Loose();
             }

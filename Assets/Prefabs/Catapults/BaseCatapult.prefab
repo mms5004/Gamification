@@ -3875,6 +3875,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: ReloadMechanism
       objectReference: {fileID: 0}
+    - target: {fileID: 6219363285892021184, guid: 4670b72081b0e9c4bbd19456e956891b, type: 3}
+      propertyPath: <RotationTime>k__BackingField
+      value: 1.2
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

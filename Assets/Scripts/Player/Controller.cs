@@ -29,16 +29,17 @@ public class Controller : MonoBehaviour
 
     void Start()
     {
-        _Catapult = this.GetComponent<Catapult>();
+        Time.timeScale = 1;
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
         Camera.transform.localPosition =  Camera.transform.localPosition.normalized * _CameraDistance;
         _RigidBody = GetComponent<Rigidbody>();
+        _Catapult = this.GetComponent<Catapult>();
     }
 
     void Update()
     {
-        if (PauseMenu.isPaused)
+        if (PauseMenu.isPaused || PauseMenu.isFinised)
         {
             return;
         }

@@ -7,16 +7,22 @@ using UnityEngine.SceneManagement;
 public class PauseMenu : MonoBehaviour
 {
     public static bool isPaused = false;
-    public static bool isLoosed = false;
+    public static bool isFinised = false;
 
     public GameObject PauseMenuUI;
     public GameObject LooseMenuUI;
+    public GameObject WinMenuUI;
 
+    void Start()
+    {
+        isPaused = false;
+        isFinised = false;
+    }
     // Update is called once per frame
     void Update()
     {
-        if (isLoosed) return;
-        if (Input.GetKeyDown(KeyCode.P))
+        if (isFinised) return;
+        if (Input.GetKeyDown(KeyCode.P) || Input.GetKeyDown(KeyCode.Escape))
         {
             if(isPaused)
             {                
@@ -45,13 +51,23 @@ public class PauseMenu : MonoBehaviour
         Time.timeScale = 0f;
         isPaused = true;
     }
+
     public void Loose()
     {
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.Confined;
         LooseMenuUI.SetActive(true);
         Time.timeScale = 0f;
-        isLoosed = true;
+        isFinised = true;
+    }
+
+    public void Win()
+    {
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.Confined;
+        WinMenuUI.SetActive(true);
+        Time.timeScale = 0f;
+        isFinised = true;
     }
 
     public void LoadMenu()

@@ -18,6 +18,7 @@ public class SpawnerManager : MonoBehaviour
     [SerializeField] private EnemyManager _enemyManager;
     [SerializeField] private List<GameObject> _spawnerClassList;
     [SerializeField] private List<EnemyWave> _enemyWaveList;
+    [SerializeField] private PauseMenu _pauseSystem;
 
     [SerializeField] private float _minSpawnerDistance = 150;
     [SerializeField] private float _maxSpawnerDistance = 200;
@@ -26,6 +27,7 @@ public class SpawnerManager : MonoBehaviour
 
     private int _currentWaveIndex;
     private float _elapsedTime;
+    private bool _bIsWaveStarted;
 
     private List<Spawner> _spawnerList;
 
@@ -56,17 +58,19 @@ public class SpawnerManager : MonoBehaviour
 
     IEnumerator GameLoop()
     {
-        bool IsWaveStarted = false;
-        _currentWaveIndex = 0;
 
         while (true)
         {
-            if (_currentWaveIndex >= _enemyWaveList.Count) yield break;
+            if (_currentWaveIndex >= _enemyWaveList.Count)
+            {
+                _pauseSystem.Win();
+                yield break;
+            }
 
-            if (!IsWaveStarted)
+            if (!_bIsWaveStarted)
             {
                 StartWave(_enemyWaveList[_currentWaveIndex]);
-                IsWaveStarted = true;
+                _bIsWaveStarted = true;
 
                 yield return new WaitForSeconds(_enemyWaveList[_currentWaveIndex].Duration);
             }
@@ -74,7 +78,7 @@ public class SpawnerManager : MonoBehaviour
             else
             {
                 StopWave();
-                IsWaveStarted = false;
+                _bIsWaveStarted = false;
                 _currentWaveIndex++;
 
                 yield return new WaitForSeconds(_waveDelay);

@@ -18,7 +18,7 @@ public class Enemy : MonoBehaviour
         Vector3 direction = _target.transform.position - transform.position;
         direction.y = 0;
         transform.position += _speed * Time.deltaTime * Vector3.Normalize(direction);
-        Rect rectangle = new Rect(_target.transform.position.x - 10, _target.transform.position.z - 10, 20, 20);
+        Rect rectangle = new Rect(_target.transform.position.x - 15, _target.transform.position.z - 15, 30, 30);
 
         if (rectangle.Contains(new Vector2(transform.position.x, transform.position.z)))
         {
